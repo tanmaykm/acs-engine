@@ -27,6 +27,7 @@ write_files:
 {{else}}
     ExecStart=/usr/bin/docker daemon -H fd:// --storage-driver=overlay2 --bip={{WrapAsVariable "dockerBridgeCidr"}}
 {{end}}
+
 - path: "/etc/docker/daemon.json"
   permissions: "0644"
   owner: "root"
@@ -429,6 +430,24 @@ write_files:
     WantedBy=multi-user.target
     Alias=etcd.service
 
+- path: "/opt/azure/containers/ephemeraldocker.sh"
+  permissions: "0744"
+  owner: "root"
+  content: |
+    #!/bin/bash
+    # Use ephemeral storage for docker storage
+    set -x
+    grep -w "\/var\/lib\/docker" /etc/fstab
+    if [ $? -eq 0 ]
+    then
+        echo "docker volume is already mounted"
+        exit 0
+    fi
+    mkdir -p /var/lib/docker
+    sed -i "s_/mnt_/var/lib/docker_" /etc/fstab
+    mount -a
+    touch /var/run/reboot-required
+
 - path: "/opt/azure/containers/setup-etcd.sh"
   permissions: "0744"
   owner: "root"
@@ -504,6 +523,7 @@ runcmd:
 - "echo \"Package: docker-engine\nPin: version {{WrapAsVariable "dockerEngineVersion"}}\nPin-Priority: 550\n\" > /etc/apt/preferences.d/docker.pref"
 - retrycmd_if_failure apt-get update
 - retrycmd_if_failure apt-get install -y ebtables
+- /opt/azure/containers/ephemeraldocker.sh
 - retrycmd_if_failure apt-get install -y docker-engine
 - systemctl restart docker
 - mkdir -p /etc/kubernetes/manifests

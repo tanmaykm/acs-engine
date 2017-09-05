@@ -162,6 +162,24 @@ write_files:
   content: !!binary |
     {{WrapAsVariable "provisionScript"}}
 
+- path: "/opt/azure/containers/ephemeraldocker.sh"
+  permissions: "0744"
+  owner: "root"
+  content: |
+    #!/bin/bash
+    # Use ephemeral storage for docker storage
+    set -x
+    grep -w "\/var\/lib\/docker" /etc/fstab
+    if [ $? -eq 0 ]
+    then
+        echo "docker volume is already mounted"
+        exit 0
+    fi
+    mkdir -p /var/lib/docker
+    sed -i "s_/mnt_/var/lib/docker_" /etc/fstab
+    mount -a
+    touch /var/run/reboot-required
+
 {{if .IsCoreOS}}
 - path: "/opt/azure/containers/provision-setup.sh"
   permissions: "0755"
@@ -209,6 +227,7 @@ runcmd:
 - "echo \"Package: docker-engine\nPin: version {{WrapAsVariable "dockerEngineVersion"}}\nPin-Priority: 550\n\" > /etc/apt/preferences.d/docker.pref"
 - apt-get update
 - apt-get install -y ebtables
+- /opt/azure/containers/ephemeraldocker.sh
 - apt-get install -y docker-engine
 - echo `date`,`hostname`, postdockerinstall>>/opt/m
 - systemctl restart docker
