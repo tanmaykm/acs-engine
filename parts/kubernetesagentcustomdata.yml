@@ -14,7 +14,7 @@ write_files:
   content: |
     [Service]
     ExecStart=
-    ExecStart=/usr/bin/docker daemon -H fd:// --storage-driver=overlay --bip={{WrapAsVariable "dockerBridgeCidr"}}
+    ExecStart=/usr/bin/docker daemon -g /mnt/docker -H fd:// --storage-driver=overlay2 --bip={{WrapAsVariable "dockerBridgeCidr"}}
 
 - path: "/etc/docker/daemon.json"
   permissions: "0644"
@@ -157,6 +157,7 @@ runcmd: {{GetKubernetesAgentPreprovisionYaml .}}
 - "echo \"Package: docker-engine\nPin: version {{WrapAsVariable "dockerEngineVersion"}}\nPin-Priority: 550\n\" > /etc/apt/preferences.d/docker.pref"
 - apt-get update
 - apt-get install -y ebtables
+- mkdir -p /mnt/docker
 - apt-get install -y docker-engine
 - systemctl restart docker
 - mkdir -p /etc/kubernetes/manifests
