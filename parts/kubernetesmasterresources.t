@@ -77,6 +77,20 @@
       "name": "[variables('nsgName')]",
       "properties": {
         "securityRules": [
+          {
+            "name": "allow_kube_http",
+            "properties": {
+              "access": "Allow",
+              "description": "Allow kube-apiserver http traffic to master",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "80-80",
+              "direction": "Inbound",
+              "priority": 103,
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          },
 {{if .HasWindows}}
           {
             "name": "allow_rdp", 
