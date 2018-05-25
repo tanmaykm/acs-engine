@@ -124,6 +124,21 @@ function installEtcd() {
     retrycmd_if_failure 10 1 5 sudo etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit $ERR_ETCD_CONFIG_FAIL
 }
 
+function ephemeralDocker() {
+    # Use ephemeral storage for docker storage
+    set -x
+    grep -w "\/var\/lib\/docker" /etc/fstab
+    if [ $? -eq 0 ]
+    then
+        echo "docker volume is already mounted"
+        exit 0
+    fi
+    mkdir -p /var/lib/docker
+    sed -i "s_/mnt_/var/lib/docker_" /etc/fstab
+    mount -a
+    touch /var/run/reboot-required
+}
+
 function installDocker() {
     apt_get_install 20 30 120 apt-transport-https ca-certificates iptables iproute2 socat util-linux mount ebtables ethtool init-system-helpers || exit $ERR_APT_INSTALL_TIMEOUT
     retrycmd_if_failure_no_stats 20 1 5 curl -fsSL https://aptdocker.azureedge.net/gpg > /tmp/aptdocker.gpg || exit $ERR_DOCKER_KEY_DOWNLOAD_TIMEOUT
@@ -456,6 +471,7 @@ else
     echo "skipping master node provision operations, this is an agent node"
 fi
 
+ephemeralDocker
 installDocker
 runAptDaily
 configureK8s

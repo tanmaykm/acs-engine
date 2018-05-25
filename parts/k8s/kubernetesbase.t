@@ -166,6 +166,20 @@
               "sourceAddressPrefix": "*",
               "sourcePortRange": "*"
             }
+          },
+          {
+            "name": "allow_kube_http",
+            "properties": {
+              "access": "Allow",
+              "description": "Allow http traffic to master (juliabox specific, to avoid occasional strange loss of nsg rules)",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "80-80",
+              "direction": "Inbound",
+              "priority": 103,
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
           }
         ]
       },
