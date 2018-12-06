@@ -474,7 +474,6 @@ else
 fi
 
 installDocker
-runAptDaily
 configureK8s
 ensureDocker
 configNetworkPlugin
@@ -532,4 +531,6 @@ if $REBOOTREQUIRED; then
   # wait 1 minute to restart node, so that the custom script extension can complete
   echo 'reboot required, rebooting node in 1 minute'
   /bin/bash -c "shutdown -r 1 &"
+else
+  runAptDaily &
 fi
